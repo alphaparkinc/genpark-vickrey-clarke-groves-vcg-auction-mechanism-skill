@@ -1,0 +1,15 @@
+{
+  "name": "genpark-vickrey-clarke-groves-vcg-auction-mechanism-skill",
+  "version": "1.0.0",
+  "description": "Truthful VCG auction mechanism with Clarke pivot payments.",
+  "author": "GenPark AI",
+  "license": "Apache-2.0",
+  "dependencies": [],
+  "keywords": [
+    "vcg-auction",
+    "mechanism-design",
+    "truthful-bidding",
+    "clarke-pivot",
+    "agentic-ai"
+  ]
+}
