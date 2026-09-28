@@ -1,55 +1,66 @@
+"""Vickrey-Clarke-Groves (VCG) Combinatorial Auction Mechanism.
+100% Python Standard Library.
 """
-Vickrey-Clarke-Groves (VCG) Auction Mechanism Skill Client
-Pure Python Standard Library implementation of VCG truthful mechanism design.
-Calculates socially optimal resource allocation and Clarke pivot rule payments,
-guaranteeing that truthful valuation bidding is a weakly dominant strategy (DSIC).
-"""
-
-from typing import Dict, List, Tuple, Any, Optional
-
 
 class VCGAuction:
-    def __init__(self, items: List[str]):
-        self.items = list(items)
+    """Computes social welfare-maximizing bundle allocation and Clarke pivot payments."""
+    @staticmethod
+    def run_auction(items, bidders_bids):
+        bidder_ids = list(bidders_bids.keys())
+        best_welfare = -1.0
+        best_allocation = None
+        
+        def search_alloc(idx, remaining_items, current_alloc, current_welfare):
+            nonlocal best_welfare, best_allocation
+            if idx == len(bidder_ids):
+                if current_welfare > best_welfare:
+                    best_welfare = current_welfare
+                    best_allocation = dict(current_alloc)
+                return
+                
+            bidder = bidder_ids[idx]
+            bids = bidders_bids[bidder]
+            
+            search_alloc(idx + 1, remaining_items, current_alloc, current_welfare)
+            for bundle, val in bids.items():
+                bundle_set = set(bundle)
+                if bundle_set.issubset(remaining_items):
+                    current_alloc[bidder] = bundle
+                    search_alloc(idx + 1, remaining_items - bundle_set, current_alloc, current_welfare + val)
+                    del current_alloc[bidder]
 
-    def run_single_item_auction(self, bids: Dict[str, float]) -> Dict[str, Any]:
-        """Execute single-item second-price VCG auction."""
-        sorted_bids = sorted(bids.items(), key=lambda x: x[1], reverse=True)
-        if not sorted_bids:
-            return {"winner": None, "winning_bid": 0.0, "payment": 0.0, "social_welfare": 0.0}
+        search_alloc(0, set(items), {}, 0.0)
+        
+        payments = {}
+        for bidder in bidder_ids:
+            w_others_actual = sum(
+                bidders_bids[b].get(best_allocation.get(b, ()), 0.0)
+                for b in bidder_ids if b != bidder
+            )
+            
+            best_cf_welfare = 0.0
+            def search_cf(idx, remaining_items, cur_welfare):
+                nonlocal best_cf_welfare
+                if idx == len(bidder_ids):
+                    if cur_welfare > best_cf_welfare:
+                        best_cf_welfare = cur_welfare
+                    return
+                b = bidder_ids[idx]
+                if b == bidder:
+                    search_cf(idx + 1, remaining_items, cur_welfare)
+                    return
+                bids = bidders_bids[b]
+                search_cf(idx + 1, remaining_items, cur_welfare)
+                for bundle, val in bids.items():
+                    b_set = set(bundle)
+                    if b_set.issubset(remaining_items):
+                        search_cf(idx + 1, remaining_items - b_set, cur_welfare + val)
 
-        winner, winning_bid = sorted_bids[0]
-        second_price = sorted_bids[1][1] if len(sorted_bids) > 1 else 0.0
-
+            search_cf(0, set(items), 0.0)
+            payments[bidder] = round(best_cf_welfare - w_others_actual, 4)
+            
         return {
-            "winner": winner,
-            "winning_bid": winning_bid,
-            "payment": second_price,  # Clarke pivot payment (opportunity cost imposed on others)
-            "social_welfare": winning_bid,
-            "agent_utility": winning_bid - second_price,
-            "truthful_dominant_strategy": True
-        }
-
-    def run_multi_unit_auction(self, bids: Dict[str, float], units_available: int) -> Dict[str, Any]:
-        """Execute multi-unit VCG auction where each bidder demands 1 unit."""
-        sorted_bids = sorted(bids.items(), key=lambda x: x[1], reverse=True)
-        k = min(units_available, len(sorted_bids))
-        winners = sorted_bids[:k]
-        clearing_price = sorted_bids[k][1] if len(sorted_bids) > k else 0.0
-
-        allocations = {}
-        for bidder, b in winners:
-            allocations[bidder] = {
-                "units_won": 1,
-                "bid": b,
-                "payment": clearing_price,
-                "surplus": b - clearing_price
-            }
-
-        return {
-            "units_available": units_available,
-            "units_allocated": k,
-            "allocations": allocations,
-            "total_revenue": clearing_price * k,
-            "total_social_welfare": sum(b for _, b in winners)
+            "allocation": {k: list(v) for k, v in best_allocation.items()},
+            "payments": payments,
+            "social_welfare": round(best_welfare, 4)
         }
