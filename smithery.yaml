@@ -1,0 +1,5 @@
+name: genpark-vickrey-clarke-groves-vcg-auction-mechanism-skill
+description: Vickrey-Clarke-Groves (VCG) truthful, incentive-compatible combinatorial auction mechanism with Clarke pivot payments
+version: 1.0.0
+runtime: python
+entrypoint: mcp_server.py
