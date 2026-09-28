@@ -1,23 +1,16 @@
-# GenPark Vickrey-Clarke-Groves (VCG) Auction Mechanism Skill
+# Vickrey-Clarke-Groves (VCG) Auction Skill
 
-Truthful Vickrey-Clarke-Groves (VCG) auction mechanism with Clarke pivot payments.
-
-Learn more at [GenPark](https://genpark.ai) and the [GenPark MCP Catalog](https://genpark.ai/mcp).
+Truthful, dominant-strategy incentive-compatible (DSIC) mechanism for allocating arbitrary discrete resource bundles.
 
 ```mermaid
-graph TD
-    B[Agent Sealed Bids] --> W[Welfare Maximization Winner Determination]
-    W --> C[Clarke Pivot Payment Calculation]
-    C --> P[Dominant-Strategy Incentive Compatibility DSIC]
-    P --> U[Truthful Bidding weakly dominant for all agents]
-    style B fill:#e1f5fe
-    style W fill:#fff9c4
-    style C fill:#ffcdd2
-    style P fill:#c8e6c9
-    style U fill:#d1c4e9
+flowchart TD
+    Bids["Agent Bundle Valuations v_i(S)"] --> Alloc["Max Social Welfare Allocation x*"]
+    Alloc --> Counterfactual["Counterfactual Allocation without Agent i"]
+    Counterfactual --> Harm["Externality Imposed on Others by Winner i"]
+    Harm --> Payment["Clarke Pivot Payment p_i"]
 ```
 
 ## Features
-- Single-item second-price sealed-bid VCG implementation.
-- Multi-unit uniform Clarke pivot rule pricing.
-- Pure Python standard library.
+- **100% Python Standard Library**: Exhaustive combinatorial search engine.
+- **Truthful Mechanism**: Truth-telling is a weakly dominant strategy for all bidders.
+- **Clarke Pivot Rule**: Guarantees individual rationality and non-negative payments.
